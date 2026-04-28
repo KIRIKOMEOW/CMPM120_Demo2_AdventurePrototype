@@ -82,7 +82,7 @@ Asset sources
 Backgrounds and character concepts are inspired by Magical Girl Witch Trial (魔法少女的魔女审判).
 Some backgrounds were recreated or extended using AI tools based on this visual style.
 Character sprites (Sherry) and overall setting are adapted from this game’s aesthetic and narrative inspiration.
-UI elements and item textures (message box, backpack, buttons, items) were generated using AI image tools and adjusted for game use.
+UI elements and item textures (message box, backpack, buttons, items) were generated using GPT-imageV2 and adjusted for game use.
 All dialogue and story writing were created by me.
 
 Code sources
