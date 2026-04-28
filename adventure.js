@@ -60,8 +60,8 @@ class AdventureScene extends Phaser.Scene {
             .setStyle({ fontSize: `${3 * this.s}px` })
             .setWordWrapWidth(this.w * 0.25 - 2 * this.s);
 
-        this.messageBox = this.add.text(this.w * 0.75 + this.s, this.h * 0.33)
-            .setStyle({ fontSize: `${2 * this.s}px`, color: '#eea' })
+        this.messageBox = this.add.text(this.w * 0.75 + this.s, this.h * 0.3)
+            .setStyle({ fontSize: `${1.45 * this.s}px`, color: '#eea', lineSpacing: 6 })
             .setWordWrapWidth(this.w * 0.25 - 2 * this.s);
 
         this.inventoryBanner = this.add.text(this.w * 0.75 + this.s, this.h * 0.66)
@@ -72,10 +72,10 @@ class AdventureScene extends Phaser.Scene {
         this.inventoryTexts = [];
         this.updateInventory();
 
-        this.add.text(this.w-3*this.s, this.h-3*this.s, "📺")
-            .setStyle({ fontSize: `${2 * this.s}px` })
+        this.add.text(this.w-3.4*this.s, this.h-3*this.s, "FS")
+            .setStyle({ fontSize: `${1.6 * this.s}px`, color: '#ffffff' })
             .setInteractive({useHandCursor: true})
-            .on('pointerover', () => this.showMessage('Fullscreen?'))
+            .on('pointerover', () => this.showMessage('Toggle fullscreen.'))
             .on('pointerdown', () => {
                 if (this.scale.isFullscreen) {
                     this.scale.stopFullscreen();
@@ -95,13 +95,47 @@ class AdventureScene extends Phaser.Scene {
      * @param {string} message The text to show.
      */
     showMessage(message) {
+        this.tweens.killTweensOf(this.messageBox);
         this.messageBox.setText(message);
+        this.messageBox.setAlpha(1);
         this.tweens.add({
             targets: this.messageBox,
             alpha: { from: 1, to: 0 },
             easing: 'Quintic.in',
+            delay: 5000,
             duration: 4 * this.transitionDuration
         });
+    }
+
+    /**
+     * Add a full-screen background image for the left-side game stage.
+     * Use this for scene artwork backgrounds and placeholders.
+     *
+     * @param {string} key The Phaser image key loaded by preload.
+     * @returns {Phaser.GameObjects.Image}
+     */
+    addBackground(key) {
+        const bg = this.add.image(0, 0, key).setOrigin(0, 0);
+        bg.setDisplaySize(this.w * 0.75, this.h);
+        return bg;
+    }
+
+    /**
+     * Create the shared inventory panel background used by inventory overlays.
+     *
+     * @param {number} width Display width.
+     * @param {number} height Display height.
+     * @returns {Phaser.GameObjects.Image|Phaser.GameObjects.Rectangle}
+     */
+    createInventoryBackground(width, height) {
+        if (this.textures.exists('inventoryBg')) {
+            return this.add.image(0, 0, 'inventoryBg')
+                .setDisplaySize(width, height)
+                .setDepth(0);
+        }
+        return this.add.rectangle(0, 0, width, height, 0x080808, 0.84)
+            .setStrokeStyle(3, 0xe6cf98, 0.9)
+            .setDepth(0);
     }
 
     /**
@@ -206,11 +240,12 @@ class AdventureScene extends Phaser.Scene {
      * the current inventory with us.
      *
      * @param {string} key The Phaser scene key of the destination scene.
+     * @param {object} data Extra scene data to pass through the transition.
      */
-    gotoScene(key) {
+    gotoScene(key, data = {}) {
         this.cameras.main.fade(this.transitionDuration, 0, 0, 0);
         this.time.delayedCall(this.transitionDuration, () => {
-            this.scene.start(key, { inventory: this.inventory });
+            this.scene.start(key, { inventory: this.inventory, ...data });
         });
     }
 
