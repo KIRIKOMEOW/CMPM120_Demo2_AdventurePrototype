@@ -1,4 +1,3 @@
-README 
 A simple adventure game by KIRIKOMEOW
 
 based on a simple adventure game engine by Adam Smith
