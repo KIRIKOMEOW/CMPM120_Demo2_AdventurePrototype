@@ -85,9 +85,15 @@ Character sprites (Sherry) and overall setting are adapted from this game’s ae
 UI elements and item textures (message box, backpack, buttons, items) were generated using GPT-imageV2 and adjusted for game use.
 All dialogue and story writing were created by me.
 
+Audio sources  
+Background music used in this project is inspired by and sourced from *Magical Girl Witch Trial* (魔法少女的魔女审判).  
+All audio is used strictly for non-commercial and educational purposes.  
+This project does not claim ownership of the original audio assets.
+
 Code sources
 adventure.js and index.html were created by Adam Smith and modified by me.
 game.js was originally sketched by Adam Smith and significantly rewritten and extended by me.
+
 
  
 Future Improvements
