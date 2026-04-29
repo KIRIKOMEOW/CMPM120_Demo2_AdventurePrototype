@@ -22,7 +22,7 @@ class AdventureScene extends Phaser.Scene {
      *
      * @param {{inventory?: string[]}} data
      */
-    init(data) {
+    init(data = {}) {
         this.inventory = data.inventory || [];
     }
 
@@ -53,6 +53,9 @@ class AdventureScene extends Phaser.Scene {
 
         this.cameras.main.setBackgroundColor('#444');
         this.cameras.main.fadeIn(this.transitionDuration, 0, 0, 0);
+        if (typeof playGameBgm === 'function') {
+            playGameBgm(this);
+        }
 
         this.add.rectangle(this.w * 0.75, 0, this.w * 0.25, this.h).setOrigin(0, 0).setFillStyle(0);
         this.add.text(this.w * 0.75 + this.s, this.s)
@@ -265,4 +268,84 @@ class AdventureScene extends Phaser.Scene {
     onEnter() {
         console.warn('This AdventureScene did not implement onEnter():', this.constructor.name);
     }
+}
+
+function createChapterSelectPanel(scene, chapters, onClose) {
+    const w = scene.game.config.width;
+    const h = scene.game.config.height;
+    const panel = scene.add.container(0, 0).setDepth(80);
+    const overlay = scene.add.rectangle(0, 0, w, h, 0x000000, 0.68)
+        .setOrigin(0)
+        .setInteractive();
+    const frame = scene.add.rectangle(w * 0.5, h * 0.52, w * 0.82, h * 0.58, 0x11100e, 0.94)
+        .setStrokeStyle(3, 0xd6b675, 0.9);
+    const title = scene.add.text(w * 0.5, h * 0.25, TEXT.scene0.chapterSelectTitle, {
+        fontFamily: 'Arial, sans-serif',
+        fontSize: '44px',
+        color: '#fff4d8',
+        stroke: '#000000',
+        strokeThickness: 5
+    }).setOrigin(0.5);
+    const close = scene.add.text(w * 0.88, h * 0.25, 'X', {
+        fontFamily: 'Arial, sans-serif',
+        fontSize: '34px',
+        color: '#fff4d8',
+        stroke: '#000000',
+        strokeThickness: 4
+    }).setOrigin(0.5).setInteractive({ useHandCursor: true });
+
+    close.on('pointerdown', () => {
+        panel.destroy();
+        if (onClose) {
+            onClose();
+        }
+    });
+    panel.add([overlay, frame, title, close]);
+
+    const cardWidth = w * 0.17;
+    const cardHeight = h * 0.28;
+    const gap = w * 0.025;
+    const startX = w * 0.5 - ((cardWidth + gap) * (chapters.length - 1)) / 2;
+    const y = h * 0.55;
+
+    chapters.forEach((chapter, index) => {
+        const x = startX + index * (cardWidth + gap);
+        const card = scene.add.container(x, y)
+            .setSize(cardWidth, cardHeight)
+            .setInteractive(new Phaser.Geom.Rectangle(0, 0, cardWidth, cardHeight), Phaser.Geom.Rectangle.Contains);
+        card.input.cursor = 'pointer';
+
+        const cardBg = scene.add.rectangle(0, 0, cardWidth, cardHeight, 0x1f1a14, 0.96)
+            .setStrokeStyle(2, 0x8b7144, 0.85);
+        const thumb = scene.add.image(0, -cardHeight * 0.12, chapter.thumbnailKey)
+            .setDisplaySize(cardWidth * 0.88, cardHeight * 0.56);
+        const label = scene.add.text(0, cardHeight * 0.28, chapter.title, {
+            fontFamily: 'Arial, sans-serif',
+            fontSize: '22px',
+            color: '#f8e9c5',
+            align: 'center',
+            wordWrap: { width: cardWidth * 0.82 }
+        }).setOrigin(0.5);
+
+        card.add([cardBg, thumb, label]);
+        card.on('pointerover', () => {
+            scene.tweens.killTweensOf(card);
+            scene.tweens.add({ targets: card, scale: 1.04, duration: 120, ease: 'Sine.out' });
+        });
+        card.on('pointerout', () => {
+            scene.tweens.killTweensOf(card);
+            scene.tweens.add({ targets: card, scale: 1, duration: 120, ease: 'Sine.out' });
+        });
+        card.on('pointerdown', () => {
+            if (typeof fadeOutGoodEndBgm === 'function') {
+                fadeOutGoodEndBgm(scene, 800, () => scene.scene.start(chapter.sceneKey));
+            } else {
+                scene.scene.start(chapter.sceneKey);
+            }
+        });
+
+        panel.add(card);
+    });
+
+    return panel;
 }

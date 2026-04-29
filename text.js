@@ -1,22 +1,30 @@
 const TEXT = {
     scene0: {
         title: 'START',
-        subtitle: 'Click START to begin your story in the Witch Prison'
+        subtitle: 'Click START to begin your story in the Witch Prison',
+        chapterSelect: 'Chapter Select',
+        chapterSelectTitle: 'Chapter Select',
+        chapters: {
+            scene1: 'Chapter 1: Prison Cell',
+            scene2: 'Chapter 2: Prison Corridor',
+            scene3: 'Chapter 3: Solitary Room',
+            scene4: 'Chapter 4: Escape'
+        }
     },
     scene1: {
-        intro: 'Sherry Tachibana waits inside the prison cell.\n\nShe was born with strange strength magic. Earlier today, a plate shattered at dinner, and the jailers blamed her for it.\n\nFootsteps echo in the hallway. Someone is coming.',
-        plateChoice: 'Broken Plate',
+        intro: 'Sherry Tachibana waits inside the prison cell.\n\nShe was born with strange strength magic. Earlier today, a plate shattered at dinner, and the guards blamed her for it.\n\nFootsteps echo in the hallway. Someone is coming.',
+        plateChoice: '`Crush the Apple',
         plateMemory: 'A memory surfaces: Sherry holding an apple, then crushing it as if it were made of paper.',
-        jailerDialogue: 'The jailer stops outside the cell door.\n\n"You broke the dinner plate. The warden ordered me to take you to solitary confinement."',
+        jailerDialogue: 'The guard stops outside the cell door.\n\n"You broke the dinner plate. The warden ordered me to take you to solitary confinement."',
         powerChoice: 'Use strength magic',
-        obeyChoice: 'Obey the jailer',
-        obeyResult: 'Sherry lowers her hands and follows the jailer toward solitary confinement.'
+        obeyChoice: 'Obey the guard',
+        obeyResult: 'Sherry lowers her hands and follows the guard toward solitary confinement.'
     },
     scene2: {
         intro: 'Sherry is escorted out of her cell, walking down a narrow, dim corridor toward solitary confinement.\n\nFootsteps echo through the corridor, each step feeling heavier than the last.',
         spearHint: 'Leia\'s Simple Spear lies carelessly along the side of the corridor.',
         spearChoicePrompt: 'That is when Sherry notices it: a crude spear, carelessly placed along the side of the corridor.\n\n...Why would something like that be here?\n\nIt is within reach. If I act now...',
-        attackChoice: 'Pick up the spear and attack the jailer',
+        attackChoice: 'Pick up the spear and attack the guard',
         ignoreChoice: 'Ignore the spear and keep walking',
         ignoreResult: '...No. I should not act recklessly.\n\nSherry looks away from the spear and keeps walking. The corridor stretches ahead, leading deeper toward solitary confinement.'
     },
@@ -92,6 +100,7 @@ const TEXT = {
         spear: 'You didn\'t really think a simple spear could take down a guard, did you?',
         hammer: 'Brute force won\'t solve everything. Try thinking more carefully.',
         shortsword: 'You seriously thought a short sword would be enough to defeat a guard?',
-        craftingCaught: 'Try crafting while avoiding the guard\'s patrol.'
+        craftingCaught: 'Try crafting while avoiding the guard\'s patrol.',
+        scene4Timeout: 'Too slow... Hesitation is not allowed here.'
     }
 };

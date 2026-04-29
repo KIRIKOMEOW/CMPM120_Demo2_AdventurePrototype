@@ -1,9 +1,17 @@
+const GAME_BGM_KEY = 'bgm';
+const GOOD_END_BGM_KEY = 'goodEndBgm';
+const BGM_TARGET_VOLUME = 0.05;
+const EASTER_LOGO_KEY = 'Logo1';
+const LOGO_HOVER_SCALE = 1.04;
+
 class PreloadScene extends Phaser.Scene {
     constructor() {
         super('preload');
     }
 
     preload() {
+        this.load.audio(GAME_BGM_KEY, 'assets/audios/近藤佑輔 - 交々のいと (-溺-).mp3');
+        this.load.audio(GOOD_END_BGM_KEY, 'assets/audios/GoodEnding_近藤佑輔 - ボクとワタシの.mp3');
         this.load.image('badEnd1', 'assets/images/BadEnd/BE_1.png');
         this.load.image('badEnd2', 'assets/images/BadEnd/BE_2.png');
         this.load.image('logo', 'assets/images/UI/Logo_Escape The Witch Prison.png');
@@ -12,6 +20,7 @@ class PreloadScene extends Phaser.Scene {
         this.load.image('messageBox', 'assets/images/UI/MessageBox.png');
         this.load.image('Backpack', 'assets/images/UI/Backpack.png');
         this.load.image('inventoryBg', 'assets/images/UI/Backpack.png');
+        this.load.image('Logo1', 'assets/images/UI/MGWT.png');
         this.load.image('bag', 'assets/images/items/bag.png');
         this.load.image('hammer', 'assets/images/items/hammer.png');
         this.load.image('doorlock', 'assets/images/items/doorlock.png');
@@ -23,6 +32,7 @@ class PreloadScene extends Phaser.Scene {
         this.load.image('keytothedoor', 'assets/images/items/keytothedoor.png');
         this.load.image('LeiaSimpleSpear', 'assets/images/items/LeiaSimpleSpear.png');
         this.load.image('Sherry_thinking', 'assets/images/Characters/Sherry_thinking.png');
+        this.load.image('sherryThinking', 'assets/images/Characters/Sherry_thinking.png');
         this.load.image('PixelSherry', 'assets/images/Characters/PixelSherry.png');
         this.load.image('PickedSherry', 'assets/images/Characters/PickedSherry.png');
         this.load.image('Sherry_smile', 'assets/images/Characters/Sherry_smile.png');
@@ -34,11 +44,152 @@ class PreloadScene extends Phaser.Scene {
         this.load.image('scene2Bg1', 'assets/images/background/prisoncorridor.png');
         this.load.image('scene3Bg1', 'assets/images/background/Jail_1.png');
         this.load.image('scene3Bg2', 'assets/images/background/Jail_1andJailer.png');
+        this.load.image('scene4Bg1', 'assets/images/background/corridor.png');
+        this.load.image('hannaProfile', 'assets/images/profiles/Profile_Hanna.png');
+        this.load.image('leiaProfile', 'assets/images/profiles/Profile_Leia.png');
+        this.load.image('meruruProfile', 'assets/images/profiles/Profile_Meruru.png');
+        this.load.image('nanokaProfile', 'assets/images/profiles/Profile_Nanoka.png');
+        this.load.image('Hanna', 'assets/images/profiles/Profile_Hanna.png');
+        this.load.image('Leia', 'assets/images/profiles/Profile_Leia.png');
+        this.load.image('Meruru', 'assets/images/profiles/Profile_Meruru.png');
+        this.load.image('Nanoka', 'assets/images/profiles/Profile_Nanoka.png');
     }
 
     create() {
         this.scene.start('scene0');
     }
+}
+
+let gameBgm = null;
+let goodEndBgm = null;
+
+const SCENE4 = {
+    walkDuration: 10000,
+    disappearInterval: 2500,
+    zoomScale: 2.55,
+    zoomTarget: { x: 980, y: 535 },
+    shadeAlpha: 0.12,
+    portal: { x: 980, y: 535, w: 230, h: 285 },
+    recordBox: { x: 0.5, y: 0.55, w: 0.52, h: 0.42, titleY: -0.16, subY: -0.105, imgX: -0.14, imgY: 0.045, imgSize: 0.16, nameX: 0.09, nameY: -0.005, descX: 0.09, descY: 0.065, closeX: 0.23, closeY: -0.17 },
+    puzzleTime: 15,
+    puzzleGoal: 32,
+    boardSize: 3,
+    puzzleUi: { x: 0.73, y: 0.5, w: 0.35, h: 0.66, titleY: 0.22, timerY: 0.285, boardY: 0.47, hintY: 0.79, tile: 0.055, gap: 0.008, sherryX: 0.15, sherryY: 0.96, sherryH: 0.36 }
+};
+
+const PAINTINGS = [
+    { id: 'hanna', x: 1440, y: 320, w: 95, h: 165, name: 'Hanna', img: 'hannaProfile', descCN: '一辈子的好朋友' },
+    { id: 'leia', x: 1370, y: 365, w: 78, h: 140, name: 'Leia', img: 'leiaProfile', descCN: '简易长矛制作人' },
+    { id: 'meruru', x: 1245, y: 425, w: 54, h: 86, name: 'Meruru', img: 'meruruProfile', descCN: '超级拼装' },
+    { id: 'nanoka', x: 1190, y: 430, w: 44, h: 76, name: 'Nanoka', img: 'nanokaProfile', descCN: '只打手枪局' }
+];
+
+function playGameBgm(scene) {
+    if (goodEndBgm) {
+        fadeOutGoodEndBgm(scene, 800, () => playGameBgm(scene));
+        return;
+    }
+    if (!scene.sound || !scene.cache.audio.exists(GAME_BGM_KEY)) {
+        return;
+    }
+    if (gameBgm && gameBgm.isPlaying) {
+        return;
+    }
+    if (gameBgm) {
+        gameBgm.destroy();
+    }
+    gameBgm = scene.sound.add(GAME_BGM_KEY, { loop: true, volume: 0 });
+    gameBgm.play();
+    scene.tweens.add({ targets: gameBgm, volume: BGM_TARGET_VOLUME, duration: 1600, ease: 'Sine.out' });
+}
+
+function fadeOutGameBgm(scene, duration = 1200, onComplete) {
+    if (!gameBgm) {
+        if (onComplete) {
+            onComplete();
+        }
+        return;
+    }
+    scene.tweens.add({
+        targets: gameBgm,
+        volume: 0,
+        duration,
+        ease: 'Sine.inOut',
+        onComplete: () => {
+            gameBgm.stop();
+            gameBgm.destroy();
+            gameBgm = null;
+            if (onComplete) {
+                onComplete();
+            }
+        }
+    });
+}
+
+function playGoodEndBgm(scene) {
+    if (gameBgm) {
+        fadeOutGameBgm(scene, 800, () => playGoodEndBgm(scene));
+        return;
+    }
+    if (!scene.sound || !scene.cache.audio.exists(GOOD_END_BGM_KEY)) {
+        return;
+    }
+    if (goodEndBgm && goodEndBgm.isPlaying) {
+        return;
+    }
+    if (goodEndBgm) {
+        goodEndBgm.destroy();
+    }
+    goodEndBgm = scene.sound.add(GOOD_END_BGM_KEY, { loop: true, volume: 0 });
+    goodEndBgm.play();
+    scene.tweens.add({ targets: goodEndBgm, volume: BGM_TARGET_VOLUME, duration: 1600, ease: 'Sine.out' });
+}
+
+function fadeOutGoodEndBgm(scene, duration = 1200, onComplete) {
+    if (!goodEndBgm) {
+        if (onComplete) {
+            onComplete();
+        }
+        return;
+    }
+    scene.tweens.add({
+        targets: goodEndBgm,
+        volume: 0,
+        duration,
+        ease: 'Sine.inOut',
+        onComplete: () => {
+            goodEndBgm.stop();
+            goodEndBgm.destroy();
+            goodEndBgm = null;
+            if (onComplete) {
+                onComplete();
+            }
+        }
+    });
+}
+
+function playBgmOnce(scene) {
+    playGameBgm(scene);
+}
+
+function fadeOutBgm(scene, duration = 1200, onComplete) {
+    fadeOutGameBgm(scene, duration, onComplete);
+}
+
+function createPulseHotspot(scene, x, y, w, h, callback) {
+    const spot = scene.add.rectangle(x, y, w, h, 0xffffff, 0.22)
+        .setStrokeStyle(2, 0xd7b5ff, 0.3)
+        .setInteractive({ useHandCursor: true });
+    scene.tweens.add({
+        targets: spot,
+        alpha: { from: 0.15, to: 0.35 },
+        duration: 900,
+        yoyo: true,
+        repeat: -1,
+        ease: 'Sine.inOut'
+    });
+    spot.on('pointerdown', callback);
+    return spot;
 }
 
 function createImageButton(scene, x, y, label, options = {}) {
@@ -60,13 +211,15 @@ function createImageButton(scene, x, y, label, options = {}) {
     const button = scene.add.container(x, y, [image, text])
         .setSize(width, height)
         .setInteractive(
-            new Phaser.Geom.Rectangle(-width / 2, -height / 2, width, height),
+            new Phaser.Geom.Rectangle(0, 0, width, height),
             Phaser.Geom.Rectangle.Contains
         );
 
     button.input.cursor = 'pointer';
     button.buttonImage = image;
     button.buttonText = text;
+    button.buttonWidth = width;
+    button.buttonHeight = height;
     return button;
 }
 
@@ -75,9 +228,19 @@ class MenuScene extends Phaser.Scene {
         super('scene0');
     }
 
+    init(data) {
+        this.goodEndingUnlocked = !!(data && data.goodEndingUnlocked);
+        this.chapterSelectPanel = null;
+    }
+
     create() {
         this.w = this.game.config.width;
         this.h = this.game.config.height;
+        if (gameBgm) {
+            gameBgm.stop();
+            gameBgm.destroy();
+            gameBgm = null;
+        }
 
         this.add.image(0, 0, 'scene0Bg').setOrigin(0).setDisplaySize(this.w, this.h);
 
@@ -95,6 +258,96 @@ class MenuScene extends Phaser.Scene {
             ease: 'Sine.out',
             duration: 900
         });
+        let logoEasterEggShown = false;
+        const logoWidth = logo.displayWidth;
+        const logoHeight = logo.displayHeight;
+        const logoBaseScaleX = logo.scaleX;
+        const logoBaseScaleY = logo.scaleY;
+        const addLogoHover = (target) => {
+            target.setInteractive({ useHandCursor: true });
+            target.on('pointerover', () => {
+                this.tweens.killTweensOf(target);
+                this.tweens.add({
+                    targets: target,
+                    scaleX: logoBaseScaleX * LOGO_HOVER_SCALE,
+                    scaleY: logoBaseScaleY * LOGO_HOVER_SCALE,
+                    alpha: 1,
+                    duration: 160,
+                    ease: 'Sine.out'
+                });
+            });
+            target.on('pointerout', () => {
+                this.tweens.killTweensOf(target);
+                this.tweens.add({
+                    targets: target,
+                    scaleX: logoBaseScaleX,
+                    scaleY: logoBaseScaleY,
+                    alpha: 1,
+                    duration: 160,
+                    ease: 'Sine.out'
+                });
+            });
+        };
+
+        logo.setInteractive({ useHandCursor: true });
+        logo.on('pointerover', () => {
+            if (logoEasterEggShown) {
+                return;
+            }
+            this.tweens.killTweensOf(logo);
+            this.tweens.add({
+                targets: logo,
+                scaleX: logoBaseScaleX * LOGO_HOVER_SCALE,
+                scaleY: logoBaseScaleY * LOGO_HOVER_SCALE,
+                alpha: 1,
+                duration: 160,
+                ease: 'Sine.out'
+            });
+        });
+        logo.on('pointerout', () => {
+            if (logoEasterEggShown) {
+                return;
+            }
+            this.tweens.killTweensOf(logo);
+            this.tweens.add({
+                targets: logo,
+                scaleX: logoBaseScaleX,
+                scaleY: logoBaseScaleY,
+                alpha: 1,
+                duration: 160,
+                ease: 'Sine.out'
+            });
+        });
+        logo.on('pointerdown', () => {
+            if (logoEasterEggShown) {
+                return;
+            }
+            logoEasterEggShown = true;
+            logo.disableInteractive();
+            this.tweens.killTweensOf(logo);
+            this.tweens.add({
+                targets: logo,
+                alpha: 0,
+                scale: 0.96,
+                duration: 220,
+                ease: 'Sine.inOut',
+                onComplete: () => {
+                    logo.setTexture(EASTER_LOGO_KEY)
+                        .setDisplaySize(logoWidth, logoHeight)
+                        .setAlpha(0);
+                    logo.setScale(logoBaseScaleX, logoBaseScaleY);
+                    const caption = this.add.text(logo.x, logo.y + logoHeight / 2 + 18, 'Magical Girls Witch Trials', {
+                        fontFamily: 'Arial, sans-serif',
+                        fontSize: '20px',
+                        color: '#fff4d8',
+                        align: 'center',
+                        shadow: { offsetX: 0, offsetY: 3, color: '#000000', blur: 7, fill: true }
+                    }).setOrigin(0.5).setAlpha(0);
+                    addLogoHover(logo);
+                    this.tweens.add({ targets: [logo, caption], alpha: 1, duration: 320, ease: 'Sine.out' });
+                }
+            });
+        });
 
         const start = createImageButton(this, this.w * 0.5, this.h * 0.6, TEXT.scene0.title, {
             width: this.w * 0.27,
@@ -102,10 +355,21 @@ class MenuScene extends Phaser.Scene {
             fontSize: '64px',
             color: '#111111'
         });
+        start.disableInteractive();
 
-        start.on('pointerover', () => {
+        const startHitArea = this.add.zone(start.x, start.y, start.buttonWidth, start.buttonHeight)
+            .setInteractive({ useHandCursor: true })
+            .setDepth(start.depth + 1);
+        let startHovered = false;
+
+        startHitArea.on('pointerover', () => {
+            if (startHovered) {
+                return;
+            }
+            startHovered = true;
             start.buttonText.setColor('#000000');
             start.buttonText.setShadow(0, 0, '#ffffff', 8, true, true);
+            this.tweens.killTweensOf(start);
             this.tweens.add({
                 targets: start,
                 y: this.h * 0.57,
@@ -115,9 +379,11 @@ class MenuScene extends Phaser.Scene {
             });
         });
 
-        start.on('pointerout', () => {
+        startHitArea.on('pointerout', () => {
+            startHovered = false;
             start.buttonText.setColor('#111111');
             start.buttonText.setShadow(0, 2, '#ffffff', 4, true, true);
+            this.tweens.killTweensOf(start);
             this.tweens.add({
                 targets: start,
                 y: this.h * 0.6,
@@ -127,9 +393,13 @@ class MenuScene extends Phaser.Scene {
             });
         });
 
-        start.on('pointerdown', () => {
+        startHitArea.on('pointerdown', () => {
             this.cameras.main.fade(800, 0, 0, 0);
-            this.time.delayedCall(800, () => this.scene.start('scene1'));
+            if (goodEndBgm) {
+                fadeOutGoodEndBgm(this, 800, () => this.scene.start('scene1'));
+            } else {
+                this.time.delayedCall(800, () => this.scene.start('scene1'));
+            }
         });
 
         this.add.text(this.w * 0.5, this.h * 0.7,
@@ -144,6 +414,38 @@ class MenuScene extends Phaser.Scene {
                 shadow: { offsetX: 0, offsetY: 3, color: '#000000', blur: 8, fill: true }
             }
         ).setOrigin(0.5, 0);
+
+        if (this.goodEndingUnlocked) {
+            const chapterSelect = createImageButton(this, this.w * 0.5, this.h * 0.82, TEXT.scene0.chapterSelect, {
+                width: this.w * 0.22,
+                height: this.h * 0.075,
+                fontSize: '30px',
+                color: '#111111'
+            });
+            chapterSelect.on('pointerover', () => {
+                this.tweens.killTweensOf(chapterSelect);
+                this.tweens.add({ targets: chapterSelect, scale: 1.05, duration: 120, ease: 'Sine.out' });
+            });
+            chapterSelect.on('pointerout', () => {
+                this.tweens.killTweensOf(chapterSelect);
+                this.tweens.add({ targets: chapterSelect, scale: 1, duration: 120, ease: 'Sine.out' });
+            });
+            chapterSelect.on('pointerdown', () => this.showChapterSelect());
+        }
+    }
+
+    showChapterSelect() {
+        if (this.chapterSelectPanel) {
+            this.chapterSelectPanel.destroy();
+        }
+        this.chapterSelectPanel = createChapterSelectPanel(this, [
+            { title: TEXT.scene0.chapters.scene1, sceneKey: 'scene1', thumbnailKey: 'scene1Bg1' },
+            { title: TEXT.scene0.chapters.scene2, sceneKey: 'scene2', thumbnailKey: 'scene2Bg1' },
+            { title: TEXT.scene0.chapters.scene3, sceneKey: 'scene3', thumbnailKey: 'scene3Bg1' },
+            { title: TEXT.scene0.chapters.scene4, sceneKey: 'scene4', thumbnailKey: 'scene0Bg' }
+        ], () => {
+            this.chapterSelectPanel = null;
+        });
     }
 }
 
@@ -154,6 +456,12 @@ class CellScene extends AdventureScene {
 
     onEnter() {
         this.sceneObjects = [];
+        this.appleMemoryActive = false;
+        this.appleMemoryFinished = false;
+        this.appleMemoryTweens = [];
+        this.appleMemoryAdvanceTimer = null;
+        this.appleMemorySkipZone = null;
+        this.appleMemoryArt = [];
         this.showCellIntro();
     }
 
@@ -183,42 +491,50 @@ class CellScene extends AdventureScene {
     }
 
     playTwoStepFade(firstImage, secondImage, onComplete) {
-        this.tweens.add({
+        const tweens = [];
+        tweens.push(this.tweens.add({
             targets: firstImage,
             alpha: 1,
             duration: 650,
             ease: 'Sine.out'
-        });
-        this.tweens.add({
+        }));
+        tweens.push(this.tweens.add({
             targets: firstImage,
             alpha: 0,
             duration: 500,
             delay: 3000,
             ease: 'Sine.inOut'
-        });
-        this.tweens.add({
+        }));
+        tweens.push(this.tweens.add({
             targets: secondImage,
             alpha: 1,
             duration: 650,
             delay: 1500,
             ease: 'Sine.out'
-        });
-        this.tweens.add({
+        }));
+        tweens.push(this.tweens.add({
             targets: secondImage,
             alpha: 0,
             duration: 500,
             delay: 6000,
             ease: 'Sine.inOut',
             onComplete
-        });
+        }));
+        return tweens;
     }
 
     playAppleMemory(plate) {
+        if (this.appleMemoryActive) {
+            this.finishAppleMemory(true);
+            return;
+        }
         plate.disableInteractive();
         if (this.guardTimer) {
             this.guardTimer.remove(false);
             this.guardTimer = null;
         }
+        this.appleMemoryActive = true;
+        this.appleMemoryFinished = false;
 
         const artWidth = this.w * 0.47;
         const artHeight = artWidth / 1.5;
@@ -234,12 +550,47 @@ class CellScene extends AdventureScene {
         this.showMessage(TEXT.scene1.plateMemory);
 
         this.sceneObjects.push(art1, art2);
+        this.appleMemoryArt = [art1, art2];
+        this.appleMemorySkipZone = this.add.zone(0, 0, this.w, this.h)
+            .setOrigin(0)
+            .setInteractive({ useHandCursor: true })
+            .setDepth(50);
+        this.appleMemorySkipZone.on('pointerdown', () => this.finishAppleMemory(true));
+        this.sceneObjects.push(this.appleMemorySkipZone);
 
-        this.playTwoStepFade(art1, art2, () => {
-            if (plate.active) {
-                plate.setInteractive({ useHandCursor: true });
-            }
-            this.time.delayedCall(500, () => this.advanceToJailerScene());
+        this.appleMemoryTweens = this.playTwoStepFade(art1, art2, () => this.finishAppleMemory(false));
+    }
+
+    finishAppleMemory(skipped) {
+        if (!this.appleMemoryActive || this.appleMemoryFinished) {
+            return;
+        }
+        this.appleMemoryActive = false;
+        this.appleMemoryFinished = true;
+
+        (this.appleMemoryTweens || []).forEach((tween) => tween.remove());
+        this.appleMemoryTweens = [];
+
+        if (this.appleMemoryAdvanceTimer) {
+            this.appleMemoryAdvanceTimer.remove(false);
+            this.appleMemoryAdvanceTimer = null;
+        }
+        if (this.appleMemorySkipZone) {
+            this.appleMemorySkipZone.destroy();
+            this.appleMemorySkipZone = null;
+        }
+        if (skipped) {
+            this.appleMemoryArt.forEach((art) => {
+                if (art && art.active) {
+                    art.destroy();
+                }
+            });
+        }
+
+        const delay = skipped ? 0 : 500;
+        this.appleMemoryAdvanceTimer = this.time.delayedCall(delay, () => {
+            this.appleMemoryAdvanceTimer = null;
+            this.advanceToJailerScene();
         });
     }
 
@@ -613,6 +964,16 @@ class SolitaryRoomScene extends AdventureScene {
                 duration: 140,
                 ease: 'Sine.out'
             });
+            if (this.caughtCrafting || this.craftingKey) {
+                return;
+            }
+            if (this.guardWatching) {
+                this.showMessage(TEXT.scene3.guardWatching);
+                return;
+            }
+            if (this.messageBox && this.messageBox.text === hoverText) {
+                this.showMessage(TEXT.scene3.intro);
+            }
         });
         sprite.on('pointerdown', () => {
             if (options.onClick) {
@@ -842,7 +1203,6 @@ class SolitaryRoomScene extends AdventureScene {
             });
             icon.on('pointerdown', () => {
                 this.toggleSelectItem(itemKey);
-                this.handleItemInteraction(itemKey);
             });
 
             addPanelObjects([glow, slot, icon, label]);
@@ -1124,7 +1484,411 @@ class EscapeScene extends Phaser.Scene {
         super('scene4');
     }
 
+    init(data = {}) {
+        this.startPuzzle = !!data.startPuzzle;
+    }
+
     create() {
+        playGameBgm(this);
+        this.w = this.scale.width;
+        this.h = this.scale.height;
+        this.puzzleOpen = false;
+        this.puzzleEnded = false;
+        this.modalOpen = false;
+        this.approachElapsed = this.startPuzzle ? SCENE4.walkDuration : 0;
+        this.approachPaused = !!this.startPuzzle;
+        this.paintings = PAINTINGS.map((painting) => ({
+            ...painting,
+            hidden: false,
+            viewed: false,
+            hotspot: null
+        }));
+
+        this.world = this.add.container(0, 0);
+        this.scene4Bg = this.add.image(0, 0, 'scene4Bg1').setOrigin(0).setDisplaySize(this.w, this.h);
+        this.world.add(this.scene4Bg);
+        this.add.rectangle(0, 0, this.w, this.h, 0x000000, SCENE4.shadeAlpha).setOrigin(0).setDepth(5);
+
+        this.paintings.forEach((painting) => this.createPaintingHotspot(painting));
+
+        this.portalHotspot = createPulseHotspot(
+            this,
+            SCENE4.portal.x,
+            SCENE4.portal.y,
+            SCENE4.portal.w,
+            SCENE4.portal.h,
+            () => this.openPuzzle()
+        );
+        this.portalHotspot.setFillStyle(0xb55cff, 0.2);
+        this.world.add(this.portalHotspot);
+
+        const scale = SCENE4.zoomScale;
+        const zoomX = this.w * 0.5 - SCENE4.zoomTarget.x * scale;
+        const zoomY = this.h * 0.5 - SCENE4.zoomTarget.y * scale;
+        if (this.startPuzzle) {
+            this.world.setScale(scale).setPosition(zoomX, zoomY);
+            this.checkPaintingDisappear();
+            this.time.delayedCall(0, () => this.openPuzzle());
+        } else {
+            this.zoomTween = this.tweens.add({
+                targets: this.world,
+                scale,
+                x: zoomX,
+                y: zoomY,
+                duration: SCENE4.walkDuration,
+                ease: 'Sine.inOut'
+            });
+        }
+    }
+
+    update(time, delta) {
+        if (this.approachPaused || this.puzzleOpen || this.puzzleEnded) {
+            return;
+        }
+        this.approachElapsed = Math.min(this.approachElapsed + delta, SCENE4.walkDuration);
+        this.checkPaintingDisappear();
+    }
+
+    createPaintingHotspot(painting) {
+        painting.hotspot = createPulseHotspot(this, painting.x, painting.y, painting.w, painting.h, () => this.showRecord(painting));
+        painting.hotspot.setFillStyle(0xd7b5ff, 0.22);
+        this.world.add(painting.hotspot);
+    }
+
+    checkPaintingDisappear() {
+        const countToHide = Math.min(Math.floor(this.approachElapsed / SCENE4.disappearInterval), this.paintings.length);
+        this.paintings.forEach((painting, index) => {
+            if (index < countToHide && !painting.hidden) {
+                this.hidePainting(painting);
+            }
+        });
+    }
+
+    hidePainting(painting) {
+        if (!painting || painting.hidden || !painting.hotspot) {
+            return;
+        }
+        painting.hidden = true;
+        painting.hotspot.disableInteractive();
+        this.tweens.killTweensOf(painting.hotspot);
+        this.tweens.add({
+            targets: painting.hotspot,
+            alpha: 0,
+            duration: 220,
+            ease: 'Sine.inOut',
+            onComplete: () => {
+                if (painting.hotspot && painting.hotspot.active) {
+                    painting.hotspot.setVisible(false);
+                }
+            }
+        });
+    }
+
+    showRecord(painting) {
+        if (this.modalOpen || painting.hidden) {
+            return;
+        }
+        this.modalOpen = true;
+        this.approachPaused = true;
+        painting.viewed = true;
+        if (this.zoomTween) {
+            this.zoomTween.pause();
+        }
+        this.setPaintingHotspotsEnabled(false);
+
+        const ui = SCENE4.recordBox;
+        this.modalOverlay = this.add.rectangle(0, 0, this.w, this.h, 0x000000, 0.45)
+            .setOrigin(0)
+            .setDepth(89)
+            .setInteractive();
+        this.recordBox = this.add.container(this.w * ui.x, this.h * ui.y).setDepth(90).setAlpha(0);
+        const bg = this.add.rectangle(0, 0, this.w * ui.w, this.h * ui.h, 0x09070b, 0.92)
+            .setStrokeStyle(2, 0xd6b675, 0.9);
+        const title = this.add.text(0, this.h * ui.titleY, 'Witches who once lived here', {
+            fontFamily: 'Arial, sans-serif',
+            fontSize: '34px',
+            color: '#fff4d8'
+        }).setOrigin(0.5);
+        const subtitle = this.add.text(0, this.h * ui.subY, 'This corridor remembers those who tried to escape.', {
+            fontFamily: 'Arial, sans-serif',
+            fontSize: '23px',
+            color: '#d8cba4',
+            align: 'center'
+        }).setOrigin(0.5);
+        const profile = this.textures.exists(painting.img)
+            ? this.add.image(this.w * ui.imgX, this.h * ui.imgY, painting.img).setDisplaySize(this.w * ui.imgSize, this.w * ui.imgSize)
+            : this.add.rectangle(this.w * ui.imgX, this.h * ui.imgY, this.w * ui.imgSize, this.w * ui.imgSize, 0x38202d, 0.95);
+        const name = this.add.text(this.w * ui.nameX, this.h * ui.nameY, painting.name, {
+            fontFamily: 'Arial, sans-serif',
+            fontSize: '38px',
+            color: '#fff4d8'
+        }).setOrigin(0.5);
+        const desc = this.add.text(this.w * ui.descX, this.h * ui.descY, painting.descCN, {
+            fontFamily: 'Arial, sans-serif',
+            fontSize: '30px',
+            color: '#f7f2d1',
+            align: 'center',
+            lineSpacing: 8,
+            wordWrap: { width: this.w * 0.22 }
+        }).setOrigin(0.5);
+        const close = this.add.text(this.w * ui.closeX, this.h * ui.closeY, 'X', {
+            fontFamily: 'Arial, sans-serif',
+            fontSize: '30px',
+            color: '#fff4d8'
+        }).setOrigin(0.5).setInteractive({ useHandCursor: true });
+        close.on('pointerdown', () => this.closeRecordBox());
+        this.recordBox.add([bg, title, subtitle, profile, name, desc, close]);
+        this.tweens.add({ targets: this.recordBox, alpha: 1, duration: 200, ease: 'Sine.out' });
+    }
+
+    closeRecordBox() {
+        if (!this.recordBox) {
+            return;
+        }
+        const box = this.recordBox;
+        const overlay = this.modalOverlay;
+        this.recordBox = null;
+        this.modalOverlay = null;
+        this.tweens.add({
+            targets: box,
+            alpha: 0,
+            duration: 200,
+            ease: 'Sine.inOut',
+            onComplete: () => {
+                box.destroy();
+                if (overlay) {
+                    overlay.destroy();
+                }
+                this.modalOpen = false;
+                this.approachPaused = false;
+                this.setPaintingHotspotsEnabled(true);
+                if (this.zoomTween) {
+                    this.zoomTween.resume();
+                }
+            }
+        });
+    }
+
+    setPaintingHotspotsEnabled(enabled) {
+        this.paintings.forEach((painting) => {
+            if (!painting.hotspot || painting.hidden) {
+                return;
+            }
+            if (enabled) {
+                painting.hotspot.setInteractive({ useHandCursor: true });
+            } else {
+                painting.hotspot.disableInteractive();
+            }
+        });
+    }
+
+    openPuzzle() {
+        if (this.puzzleOpen || this.modalOpen) {
+            return;
+        }
+        this.puzzleOpen = true;
+        this.approachPaused = true;
+        this.setPaintingHotspotsEnabled(false);
+        if (this.recordBox) {
+            this.recordBox.destroy();
+            this.recordBox = null;
+        }
+        this.board = Array.from({ length: SCENE4.boardSize }, () => Array(SCENE4.boardSize).fill(0));
+        this.puzzleTimeLeft = SCENE4.puzzleTime;
+        this.addTile();
+        this.addTile();
+        this.createPuzzleUi();
+        this.renderPuzzle();
+        this.input.keyboard.on('keydown', this.handlePuzzleKey, this);
+        this.puzzleTimer = this.time.addEvent({
+            delay: 1000,
+            loop: true,
+            callback: () => {
+                this.puzzleTimeLeft -= 1;
+                this.timerText.setText(`Time: ${this.puzzleTimeLeft}`);
+                if (this.puzzleTimeLeft <= 0) {
+                    this.finishPuzzle(false);
+                }
+            }
+        });
+    }
+
+    createPuzzleUi() {
+        const ui = SCENE4.puzzleUi;
+        this.puzzlePanel = this.add.container(0, 0).setDepth(100);
+        const panel = this.add.rectangle(this.w * ui.x, this.h * ui.y, this.w * ui.w, this.h * ui.h, 0x080706, 0.9)
+            .setStrokeStyle(3, 0xd6b675, 0.9);
+        const title = this.add.text(this.w * ui.x, this.h * ui.titleY, 'Portal Lock', {
+            fontFamily: 'Arial, sans-serif',
+            fontSize: '42px',
+            color: '#fff4d8'
+        }).setOrigin(0.5);
+        this.timerText = this.add.text(this.w * ui.x, this.h * ui.timerY, `Time: ${this.puzzleTimeLeft}`, {
+            fontFamily: 'Arial, sans-serif',
+            fontSize: '28px',
+            color: '#f7f2d1'
+        }).setOrigin(0.5);
+        const hint = this.add.text(this.w * ui.x, this.h * ui.hintY, 'Reach 32 with Arrow Keys or WASD', {
+            fontFamily: 'Arial, sans-serif',
+            fontSize: '24px',
+            color: '#d8cba4'
+        }).setOrigin(0.5);
+        this.puzzlePanel.add([panel, title, this.timerText, hint]);
+
+        if (this.textures.exists('sherryThinking')) {
+            const sherry = this.add.image(this.w * ui.sherryX, this.h * ui.sherryY, 'sherryThinking').setOrigin(0.5, 1);
+            sherry.setScale(Math.min((this.h * ui.sherryH) / sherry.height, 1));
+            this.puzzlePanel.add(sherry);
+        } else {
+            this.puzzlePanel.add(this.add.rectangle(this.w * ui.sherryX, this.h * (ui.sherryY - ui.sherryH / 2), this.w * 0.12, this.h * ui.sherryH, 0x38202d, 0.9));
+        }
+        this.tileObjects = [];
+    }
+
+    renderPuzzle() {
+        const ui = SCENE4.puzzleUi;
+        this.tileObjects.forEach((tile) => tile.destroy());
+        this.tileObjects = [];
+        const size = SCENE4.boardSize;
+        const tile = this.w * ui.tile;
+        const gap = this.w * ui.gap;
+        const startX = this.w * ui.x - ((tile + gap) * (size - 1)) / 2;
+        const startY = this.h * ui.boardY - ((tile + gap) * (size - 1)) / 2;
+
+        for (let r = 0; r < size; r += 1) {
+            for (let c = 0; c < size; c += 1) {
+                const value = this.board[r][c];
+                const x = startX + c * (tile + gap);
+                const y = startY + r * (tile + gap);
+                const bg = this.add.rectangle(x, y, tile, tile, value ? 0xffd56f : 0x2a251f, value ? 0.95 : 0.75)
+                    .setStrokeStyle(2, 0xb69a60, 0.9);
+                this.tileObjects.push(bg);
+                this.puzzlePanel.add(bg);
+                if (value) {
+                    const label = this.add.text(x, y, String(value), {
+                        fontFamily: 'Arial, sans-serif',
+                        fontSize: '34px',
+                        color: '#21170d'
+                    }).setOrigin(0.5);
+                    this.tileObjects.push(label);
+                    this.puzzlePanel.add(label);
+                }
+            }
+        }
+    }
+
+    handlePuzzleKey(event) {
+        const directions = {
+            ArrowLeft: 'left', KeyA: 'left',
+            ArrowRight: 'right', KeyD: 'right',
+            ArrowUp: 'up', KeyW: 'up',
+            ArrowDown: 'down', KeyS: 'down'
+        };
+        const direction = directions[event.code];
+        if (!direction) {
+            return;
+        }
+        event.preventDefault();
+        this.movePuzzle(direction);
+    }
+
+    movePuzzle(direction) {
+        const before = JSON.stringify(this.board);
+        const size = SCENE4.boardSize;
+        const getLine = (index) => {
+            if (direction === 'left') return this.board[index];
+            if (direction === 'right') return [...this.board[index]].reverse();
+            if (direction === 'up') return this.board.map((row) => row[index]);
+            return this.board.map((row) => row[index]).reverse();
+        };
+        const setLine = (index, line) => {
+            const values = (direction === 'right' || direction === 'down') ? [...line].reverse() : line;
+            for (let i = 0; i < size; i += 1) {
+                if (direction === 'left' || direction === 'right') {
+                    this.board[index][i] = values[i];
+                } else {
+                    this.board[i][index] = values[i];
+                }
+            }
+        };
+
+        for (let i = 0; i < size; i += 1) {
+            setLine(i, this.mergeLine(getLine(i)));
+        }
+        if (before === JSON.stringify(this.board)) {
+            return;
+        }
+        this.addTile();
+        this.renderPuzzle();
+        if (this.board.flat().some((value) => value >= SCENE4.puzzleGoal)) {
+            this.finishPuzzle(true);
+        }
+    }
+
+    mergeLine(line) {
+        const values = line.filter(Boolean);
+        const merged = [];
+        for (let i = 0; i < values.length; i += 1) {
+            if (values[i] === values[i + 1]) {
+                merged.push(values[i] * 2);
+                i += 1;
+            } else {
+                merged.push(values[i]);
+            }
+        }
+        while (merged.length < SCENE4.boardSize) {
+            merged.push(0);
+        }
+        return merged;
+    }
+
+    addTile() {
+        const empty = [];
+        this.board.forEach((row, r) => row.forEach((value, c) => {
+            if (!value) {
+                empty.push({ r, c });
+            }
+        }));
+        if (!empty.length) {
+            return;
+        }
+        const cell = Phaser.Utils.Array.GetRandom(empty);
+        this.board[cell.r][cell.c] = Math.random() < 0.85 ? 2 : 4;
+    }
+
+    finishPuzzle(success) {
+        if (this.puzzleEnded) {
+            return;
+        }
+        this.puzzleEnded = true;
+        this.input.keyboard.off('keydown', this.handlePuzzleKey, this);
+        if (this.puzzleTimer) {
+            this.puzzleTimer.remove(false);
+            this.puzzleTimer = null;
+        }
+        if (this.puzzlePanel) {
+            this.puzzlePanel.destroy();
+        }
+        this.cameras.main.fade(1200, 0, 0, 0);
+        fadeOutGameBgm(this, 1200, () => {
+            this.scene.start(success ? 'goodEnd' : 'badEnd', success ? {} : {
+                reason: 'scene4Timeout',
+                returnScene: 'scene4',
+                returnData: { startPuzzle: true },
+                returnPrompt: 'Click anywhere to retry the portal puzzle'
+            });
+        });
+    }
+}
+
+class GoodEndingScene extends Phaser.Scene {
+    constructor() {
+        super('goodEnd');
+    }
+
+    create() {
+        this.cameras.main.fadeIn(1600, 0, 0, 0);
+        playGoodEndBgm(this);
         this.w = this.scale.width;
         this.h = this.scale.height;
 
@@ -1210,7 +1974,7 @@ class EscapeScene extends Phaser.Scene {
 
         this.tweens.add({ targets: title, alpha: 1, y: this.h * 0.39, duration: 900, ease: 'Back.out' });
         this.tweens.add({ targets: prompt, alpha: 1, duration: 700, delay: 550, ease: 'Sine.out' });
-        this.input.once('pointerdown', () => this.scene.start('scene0'));
+        this.input.once('pointerdown', () => this.scene.start('scene0', { goodEndingUnlocked: true }));
     }
 }
 
@@ -1219,8 +1983,11 @@ class BadEndScene extends Phaser.Scene {
         super('badEnd');
     }
 
-    init(data) {
+    init(data = {}) {
         this.reason = data && data.reason ? data.reason : 'default';
+        this.returnScene = data.returnScene || 'scene0';
+        this.returnData = data.returnData || {};
+        this.returnPrompt = data.returnPrompt || 'Click anywhere to return to the main menu';
     }
 
     create() {
@@ -1251,7 +2018,7 @@ class BadEndScene extends Phaser.Scene {
             .setOrigin(0.5)
             .setAlpha(0);
 
-        const returnText = this.add.text(w / 2, h * 0.9, `Click anywhere to return to the main menu\n\nHint: ${hint}`, {
+        const returnText = this.add.text(w / 2, h * 0.9, `${this.returnPrompt}\n\nHint: ${hint}`, {
             fontFamily: 'Arial, sans-serif',
             fontSize: '26px',
             color: '#f0f0f0',
@@ -1304,7 +2071,7 @@ class BadEndScene extends Phaser.Scene {
         });
 
         this.input.once('pointerdown', () => {
-            this.scene.start('scene0');
+            this.scene.start(this.returnScene, this.returnData);
         });
     }
 }
@@ -1316,6 +2083,6 @@ const game = new Phaser.Game({
         width: 1920,
         height: 1080
     },
-    scene: [PreloadScene, MenuScene, CellScene, CorridorScene, SolitaryRoomScene, EscapeScene, BadEndScene],
+    scene: [PreloadScene, MenuScene, CellScene, CorridorScene, SolitaryRoomScene, EscapeScene, GoodEndingScene, BadEndScene],
     title: 'Adventure Game'
 });
