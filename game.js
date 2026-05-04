@@ -2077,6 +2077,7 @@ class BadEndScene extends Phaser.Scene {
 }
 
 const game = new Phaser.Game({
+    parent: 'root',
     scale: {
         mode: Phaser.Scale.FIT,
         autoCenter: Phaser.Scale.CENTER_BOTH,
